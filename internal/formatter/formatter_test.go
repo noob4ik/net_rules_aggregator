@@ -84,9 +84,15 @@ func TestCIDR_IPv6(t *testing.T) {
 
 // --- Amnezia formatter ---
 
+type amneziaEntryTest struct {
+	Hostname string `json:"hostname"`
+	IP       string `json:"ip"`
+	Comment  string `json:"comment,omitempty"`
+}
+
 func TestAmnezia_Basic(t *testing.T) {
 	entries := []resolver.PrefixEntry{
-		entry("5.45.192.0/18"),
+		entryFull("5.45.192.0/18", "AS13238", "Yandex LLC", "asn:AS13238"),
 		entry("77.88.0.0/18"),
 	}
 	var buf bytes.Buffer
@@ -94,20 +100,31 @@ func TestAmnezia_Basic(t *testing.T) {
 		t.Fatalf("Amnezia() error = %v", err)
 	}
 
-	var out struct {
-		Subnets []string `json:"subnets"`
-	}
+	var out []amneziaEntryTest
 	if err := json.Unmarshal(buf.Bytes(), &out); err != nil {
 		t.Fatalf("JSON unmarshal error = %v; output: %q", err, buf.String())
 	}
-	if len(out.Subnets) != 2 {
-		t.Fatalf("len(subnets) = %d; want 2", len(out.Subnets))
+	if len(out) != 2 {
+		t.Fatalf("len = %d; want 2", len(out))
 	}
-	if out.Subnets[0] != "5.45.192.0/18" {
-		t.Errorf("subnets[0] = %q; want 5.45.192.0/18", out.Subnets[0])
+	if out[0].IP != "5.45.192.0/18" {
+		t.Errorf("out[0].ip = %q; want 5.45.192.0/18", out[0].IP)
 	}
-	if out.Subnets[1] != "77.88.0.0/18" {
-		t.Errorf("subnets[1] = %q; want 77.88.0.0/18", out.Subnets[1])
+	if out[0].Hostname != "" {
+		t.Errorf("out[0].hostname = %q; want empty string", out[0].Hostname)
+	}
+	if out[0].Comment == "" {
+		t.Errorf("out[0].comment should not be empty when metadata is present")
+	}
+	if !strings.Contains(out[0].Comment, "AS13238") {
+		t.Errorf("out[0].comment = %q; want to contain AS13238", out[0].Comment)
+	}
+	if out[1].IP != "77.88.0.0/18" {
+		t.Errorf("out[1].ip = %q; want 77.88.0.0/18", out[1].IP)
+	}
+	// No metadata — comment should be omitted (empty).
+	if out[1].Comment != "" {
+		t.Errorf("out[1].comment = %q; want empty (no metadata)", out[1].Comment)
 	}
 }
 
@@ -116,14 +133,12 @@ func TestAmnezia_Empty(t *testing.T) {
 	if err := Amnezia(&buf, nil); err != nil {
 		t.Fatalf("Amnezia() error = %v", err)
 	}
-	var out struct {
-		Subnets []string `json:"subnets"`
-	}
+	var out []amneziaEntryTest
 	if err := json.Unmarshal(buf.Bytes(), &out); err != nil {
 		t.Fatalf("JSON unmarshal error = %v", err)
 	}
-	if len(out.Subnets) != 0 {
-		t.Errorf("subnets should be empty, got %v", out.Subnets)
+	if len(out) != 0 {
+		t.Errorf("output should be empty array, got %v", out)
 	}
 }
 
@@ -136,14 +151,12 @@ func TestAmnezia_IncludesIPv6(t *testing.T) {
 	if err := Amnezia(&buf, entries); err != nil {
 		t.Fatalf("Amnezia() error = %v", err)
 	}
-	var out struct {
-		Subnets []string `json:"subnets"`
-	}
+	var out []amneziaEntryTest
 	if err := json.Unmarshal(buf.Bytes(), &out); err != nil {
 		t.Fatalf("JSON unmarshal error = %v", err)
 	}
-	if len(out.Subnets) != 2 {
-		t.Errorf("expected 2 subnets (IPv4+IPv6), got %d: %v", len(out.Subnets), out.Subnets)
+	if len(out) != 2 {
+		t.Errorf("expected 2 entries (IPv4+IPv6), got %d: %v", len(out), out)
 	}
 }
 

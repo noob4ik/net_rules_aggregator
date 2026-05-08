@@ -13,7 +13,7 @@ internal/resolver/ripe.go        # RIPEstat API: IP→ASN, ASN→prefixes+org na
 internal/aggregator/aggregator.go# Deduplication + CIDR summarisation
 internal/cache/cache.go          # Read/write intermediate YAML cache
 internal/formatter/keenetic.go   # ROUTE ADD <net> MASK <mask> 0.0.0.0 :: rem ...
-internal/formatter/amnezia.go    # {"subnets": [...]}
+internal/formatter/amnezia.go    # [{"hostname":"","ip":"...","comment":"..."}, ...]
 internal/formatter/cidr.go       # Plain CIDR list, one per line
 internal/formatter/yaml.go       # Structured YAML output
 input.example.yaml               # Example input file (copy to input.yaml and edit)
@@ -121,7 +121,10 @@ ROUTE ADD 5.45.192.0       MASK 255.255.192.0   0.0.0.0 :: rem AS13238 Yandex LL
 
 **amnezia**
 ```json
-{"subnets": ["5.45.192.0/18", "77.88.0.0/18"]}
+[
+  {"hostname": "", "ip": "5.45.192.0/18", "comment": "AS13238 Yandex LLC [asn:AS13238]"},
+  {"hostname": "", "ip": "77.88.0.0/18", "comment": "AS13238 Yandex LLC [ip:77.88.55.77]"}
+]
 ```
 
 **cidr**

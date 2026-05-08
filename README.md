@@ -56,7 +56,7 @@ ips:
 net_rules_aggregator -i input.yaml -f keenetic -o routes.txt
 
 # Use cached result (no network requests)
-net_rules_aggregator --skip-resolve -f amnezia -o amnezia.json
+net_rules_aggregator --skip-resolve -f amnezia -o amnezia_sites.json
 
 # Include IPv6 prefixes
 net_rules_aggregator -i input.yaml --ip-version 6 -f cidr
@@ -90,14 +90,28 @@ ROUTE ADD 217.69.128.0     MASK 255.255.192.0   0.0.0.0 :: rem AS47764 Mail.Ru L
 
 ### `amnezia` — AmneziaVPN split tunneling
 
+```bash
+net_rules_aggregator -i input.yaml -f amnezia -o amnezia_sites.json
+```
+
 ```json
-{
-  "subnets": [
-    "5.45.192.0/18",
-    "77.88.0.0/18",
-    "217.69.128.0/18"
-  ]
-}
+[
+  {
+    "hostname": "",
+    "ip": "5.45.192.0/18",
+    "comment": "AS13238 Yandex LLC [asn:AS13238]"
+  },
+  {
+    "hostname": "",
+    "ip": "77.88.0.0/18",
+    "comment": "AS13238 Yandex LLC [ip:77.88.55.77]"
+  },
+  {
+    "hostname": "",
+    "ip": "217.69.128.0/18",
+    "comment": "AS47764 Mail.Ru LLC [domain:mail.ru]"
+  }
+]
 ```
 
 ### `cidr` — plain CIDR list

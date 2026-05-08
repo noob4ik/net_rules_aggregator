@@ -11,7 +11,8 @@ input.yaml
 # Cache and output files
 cache.yaml
 *.txt
-*.json
+keenetic_routes.bat
+amnezia_sites.json
 
 # macOS
 .DS_Store
