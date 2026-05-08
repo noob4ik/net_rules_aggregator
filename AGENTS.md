@@ -16,7 +16,7 @@ internal/formatter/keenetic.go   # ROUTE ADD <net> MASK <mask> 0.0.0.0 :: rem ..
 internal/formatter/amnezia.go    # {"subnets": [...]}
 internal/formatter/cidr.go       # Plain CIDR list, one per line
 internal/formatter/yaml.go       # Structured YAML output
-input.yaml                       # Example input file
+input.example.yaml               # Example input file (copy to input.yaml and edit)
 ```
 
 ## Key types
@@ -82,9 +82,35 @@ Defined in `resolver.KnownCDNASNs`.
 go build ./...           # compile check
 go vet ./...             # static analysis
 go run ./cmd/main.go --help
+cp input.example.yaml input.yaml   # create your own input from the example
 go run ./cmd/main.go -i input.yaml -f keenetic
 go run ./cmd/main.go --skip-resolve -f amnezia
 ```
+
+## Testing
+
+```bash
+go test ./...            # run all tests
+go test -v ./...         # verbose output
+go test ./internal/aggregator/...   # single package
+go test -run TestAggregate ./...    # single test by name
+```
+
+Test files live next to the package they test (`*_test.go`):
+
+| File | Package | What is covered |
+|------|---------|-----------------|
+| `internal/input/loader_test.go` | `input` | `NormaliseASN` edge cases, `Load` (valid/invalid YAML, host-bit zeroing, blank skipping, IPv6 prefixes) |
+| `internal/aggregator/aggregator_test.go` | `aggregator` | `prefixLess`, `tryMerge`, `removeRedundant`, `aggregatePrefixes`, `Aggregate` (dedup, merge, metadata preservation, IPv4/IPv6 independence) |
+| `internal/formatter/formatter_test.go` | `formatter` | `CIDR`, `Amnezia`, `Keenetic` (IPv6 filtering, CIDR fallback comment), `YAML`, `prefixLenToMask`, `buildComment`, `shortenSource` |
+| `internal/cache/cache_test.go` | `cache` | `Save`+`Load` round-trip, host-bit zeroing on load, invalid CIDR error, missing file error |
+| `internal/resolver/resolver_test.go` | `resolver` | `unique`, `IPToASN`, `ASNOrgName`, `ASNPrefixes` (IP version filtering, invalid prefix skipping), `ResolveDomains` concurrency fallback — all HTTP calls mocked via `httptest.Server` |
+
+**Conventions:**
+- Tests do not make real network calls; RIPE API responses are served by `httptest.Server` with a custom `http.RoundTripper` that redirects requests.
+- Table-driven tests (`t.Run`) are preferred for functions with many input variants.
+- Temporary files use `t.TempDir()` — cleaned up automatically.
+- DNS tests only use empty domain lists to avoid real lookups.
 
 ## Output format examples
 

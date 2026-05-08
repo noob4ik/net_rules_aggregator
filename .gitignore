@@ -5,6 +5,9 @@
 net_rules_aggregator
 *.exe
 
+# User input (copy of input.example.yaml with personal data)
+input.yaml
+
 # Cache and output files
 cache.yaml
 *.txt
