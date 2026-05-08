@@ -1,0 +1,12 @@
+asn:
+  - AS13238   # Yandex
+  - AS47764   # Mail.ru
+
+domains:
+  - vk.com
+  - ok.ru
+  - mail.ru
+
+ips:
+  - 77.88.55.77       # Yandex search (single IP → resolves to ASN)
+  - 5.45.192.0/18     # Yandex subnet (direct prefix)

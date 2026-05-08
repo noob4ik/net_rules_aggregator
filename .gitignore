@@ -1,0 +1,14 @@
+# IDE
+.idea/
+
+# Build output
+net_rules_aggregator
+*.exe
+
+# Cache and output files
+cache.yaml
+*.txt
+*.json
+
+# macOS
+.DS_Store
