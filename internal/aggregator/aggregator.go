@@ -127,11 +127,10 @@ func tryMerge(a, b netip.Prefix) (netip.Prefix, bool) {
 // removeRedundant removes prefixes that are fully covered by a shorter prefix
 // already present in the (sorted) slice.
 func removeRedundant(sorted []netip.Prefix) []netip.Prefix {
-	out := sorted[:0:len(sorted)]
-	for i, p := range sorted {
+	out := make([]netip.Prefix, 0, len(sorted))
+	for _, p := range sorted {
 		redundant := false
-		for j := 0; j < i; j++ {
-			super := out[j]
+		for _, super := range out {
 			if super.Bits() < p.Bits() && super.Overlaps(p) {
 				redundant = true
 				break
