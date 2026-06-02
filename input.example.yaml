@@ -6,7 +6,25 @@ domains:
   - vk.com
   - ok.ru
   - mail.ru
+  - sberbank.ru
+  - vseinstrumenti.ru
+  - ozon.ru
+  - vkvideo.ru
+  - yandex.ru
+  - ovsu.okcdn.ru
+  - cdek.ru
+  - pochta.ru
+  - yoomoney.ru
+  - sbp.nspk.ru
+  - nspk.ru
+  - gosuslugi.ru
+  - rosreestr.ru
+  - rts.ru
+  - rosstat.ru
+  - rosstat.gov.ru
+
+  
 
 ips:
-  - 77.88.55.77       # Yandex search (single IP → resolves to ASN)
-  - 5.45.192.0/18     # Yandex subnet (direct prefix)
+  - 192.168.0.0/16
+  - 10.0.0.0/8
