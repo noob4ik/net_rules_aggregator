@@ -1,6 +1,8 @@
 asn:
   - AS13238   # Yandex
   - AS47764   # Mail.ru
+  - AS200350  # Yandex.Cloud LLC
+
 
 domains:
   - vk.com
@@ -11,6 +13,8 @@ domains:
   - ozon.ru
   - vkvideo.ru
   - yandex.ru
+  - yandex-team.ru
+  - yandex.cloud
   - ovsu.okcdn.ru
   - cdek.ru
   - pochta.ru
