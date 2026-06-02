@@ -87,7 +87,6 @@ func TestCIDR_IPv6(t *testing.T) {
 type amneziaEntryTest struct {
 	Hostname string `json:"hostname"`
 	IP       string `json:"ip"`
-	Comment  string `json:"comment,omitempty"`
 }
 
 func TestAmnezia_Basic(t *testing.T) {
@@ -107,24 +106,17 @@ func TestAmnezia_Basic(t *testing.T) {
 	if len(out) != 2 {
 		t.Fatalf("len = %d; want 2", len(out))
 	}
-	if out[0].IP != "5.45.192.0/18" {
-		t.Errorf("out[0].ip = %q; want 5.45.192.0/18", out[0].IP)
+	if out[0].Hostname != "5.45.192.0/18" {
+		t.Errorf("out[0].hostname = %q; want 5.45.192.0/18", out[0].Hostname)
 	}
-	if out[0].Hostname != "" {
-		t.Errorf("out[0].hostname = %q; want empty string", out[0].Hostname)
+	if out[0].IP != "" {
+		t.Errorf("out[0].ip = %q; want empty string", out[0].IP)
 	}
-	if out[0].Comment == "" {
-		t.Errorf("out[0].comment should not be empty when metadata is present")
+	if out[1].Hostname != "77.88.0.0/18" {
+		t.Errorf("out[1].hostname = %q; want 77.88.0.0/18", out[1].Hostname)
 	}
-	if !strings.Contains(out[0].Comment, "AS13238") {
-		t.Errorf("out[0].comment = %q; want to contain AS13238", out[0].Comment)
-	}
-	if out[1].IP != "77.88.0.0/18" {
-		t.Errorf("out[1].ip = %q; want 77.88.0.0/18", out[1].IP)
-	}
-	// No metadata — comment should be omitted (empty).
-	if out[1].Comment != "" {
-		t.Errorf("out[1].comment = %q; want empty (no metadata)", out[1].Comment)
+	if out[1].IP != "" {
+		t.Errorf("out[1].ip = %q; want empty string", out[1].IP)
 	}
 }
 

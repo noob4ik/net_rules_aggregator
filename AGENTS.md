@@ -122,8 +122,8 @@ ROUTE ADD 5.45.192.0       MASK 255.255.192.0   0.0.0.0 :: rem AS13238 Yandex LL
 **amnezia**
 ```json
 [
-  {"hostname": "", "ip": "5.45.192.0/18", "comment": "AS13238 Yandex LLC [asn:AS13238]"},
-  {"hostname": "", "ip": "77.88.0.0/18", "comment": "AS13238 Yandex LLC [ip:77.88.55.77]"}
+ {"hostname": "5.45.192.0/18", "ip": ""},
+ {"hostname": "77.88.0.0/18", "ip": ""}
 ]
 ```
 
