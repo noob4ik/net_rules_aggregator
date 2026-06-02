@@ -28,7 +28,6 @@ Input YAML (ASNs, domains, IPs)
 ```bash
 git clone https://github.com/yourname/net_rules_aggregator
 cd net_rules_aggregator
-go build -o net_rules_aggregator ./cmd/main.go
 ```
 
 Requires Go 1.23+.
@@ -53,16 +52,16 @@ ips:
 
 ```bash
 # Full pipeline: resolve + aggregate + output
-net_rules_aggregator -i input.yaml -f keenetic -o routes.txt
+go run ./cmd/main.go -i input.yaml -f keenetic -o routes.txt
 
 # Use cached result (no network requests)
-net_rules_aggregator --skip-resolve -f amnezia -o amnezia_sites.json
+go run ./cmd/main.go --skip-resolve -f amnezia -o amnezia_sites.json
 
 # Include IPv6 prefixes
-net_rules_aggregator -i input.yaml --ip-version 6 -f cidr
+go run ./cmd/main.go -i input.yaml --ip-version 6 -f cidr
 
 # Both IPv4 and IPv6, YAML output
-net_rules_aggregator -i input.yaml --ip-version both -f yaml -o result.yaml
+go run ./cmd/main.go -i input.yaml --ip-version both -f yaml -o result.yaml
 ```
 
 ## Flags
@@ -91,7 +90,7 @@ ROUTE ADD 217.69.128.0     MASK 255.255.192.0   0.0.0.0 :: rem AS47764 Mail.Ru L
 ### `amnezia` — AmneziaVPN split tunneling
 
 ```bash
-net_rules_aggregator -i input.yaml -f amnezia -o amnezia_sites.json
+go run ./cmd/main.go -i input.yaml -f amnezia -o amnezia_sites.json
 ```
 
 ```json
