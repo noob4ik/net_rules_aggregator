@@ -2,6 +2,11 @@ asn:
   - AS13238   # Yandex
   - AS47764   # Mail.ru
   - AS200350  # Yandex.Cloud LLC
+  - AS57073   # Wildberries-AS
+  - AS44386   # OZON-AS
+  - AS12389   # PJSC Rostelecom
+
+
 
 
 domains:
@@ -26,9 +31,13 @@ domains:
   - rts.ru
   - rosstat.ru
   - rosstat.gov.ru
+  - wildberries.ru
+  - tbank.ru
+  - www.tbank.ru
+  - telenettv.ru
 
-  
 
-ips:
-  - 192.168.0.0/16
-  - 10.0.0.0/8
+
+#ips:
+#  - 192.168.0.0/16
+#  - 10.0.0.0/8
