@@ -3,7 +3,9 @@ package formatter
 import (
 	"bytes"
 	"encoding/json"
+	"fmt"
 	"net/netip"
+	"os"
 	"strings"
 	"testing"
 
@@ -223,6 +225,135 @@ func TestKeenetic_Empty(t *testing.T) {
 	}
 	if buf.Len() != 0 {
 		t.Errorf("expected empty output, got %q", buf.String())
+	}
+}
+
+// --- KeeneticPaged formatter ---
+
+func makeIPv4Entries(cidrs ...string) []resolver.PrefixEntry {
+	out := make([]resolver.PrefixEntry, 0, len(cidrs))
+	for _, c := range cidrs {
+		out = append(out, entry(c))
+	}
+	return out
+}
+
+func TestKeeneticPaged_SinglePage(t *testing.T) {
+	entries := makeIPv4Entries("10.0.0.0/8", "192.168.0.0/16", "172.16.0.0/12")
+	dir := t.TempDir()
+	base := dir + "/routes"
+
+	paths, err := KeeneticPaged(base, entries, 1000)
+	if err != nil {
+		t.Fatalf("KeeneticPaged() error = %v", err)
+	}
+	if len(paths) != 1 {
+		t.Errorf("len(paths) = %d; want 1", len(paths))
+	}
+
+	data, err := os.ReadFile(base + "_001.txt")
+	if err != nil {
+		t.Fatalf("ReadFile error = %v", err)
+	}
+	lines := strings.Split(strings.TrimRight(string(data), "\n"), "\n")
+	if len(lines) != 3 {
+		t.Errorf("len(lines) = %d; want 3", len(lines))
+	}
+}
+
+func TestKeeneticPaged_MultiplePages(t *testing.T) {
+	// 5 entries, pageSize=2 → 3 pages (2+2+1)
+	entries := makeIPv4Entries(
+		"10.0.0.0/8",
+		"10.1.0.0/16",
+		"10.2.0.0/16",
+		"10.3.0.0/16",
+		"10.4.0.0/16",
+	)
+	dir := t.TempDir()
+	base := dir + "/routes"
+
+	paths, err := KeeneticPaged(base, entries, 2)
+	if err != nil {
+		t.Fatalf("KeeneticPaged() error = %v", err)
+	}
+	if len(paths) != 3 {
+		t.Errorf("len(paths) = %d; want 3", len(paths))
+	}
+
+	counts := map[int]int{1: 2, 2: 2, 3: 1}
+	for p, wantLines := range counts {
+		path := fmt.Sprintf("%s_%03d.txt", base, p)
+		data, err := os.ReadFile(path)
+		if err != nil {
+			t.Fatalf("ReadFile(%q) error = %v", path, err)
+		}
+		lines := strings.Split(strings.TrimRight(string(data), "\n"), "\n")
+		if len(lines) != wantLines {
+			t.Errorf("page %d: len(lines) = %d; want %d", p, len(lines), wantLines)
+		}
+	}
+}
+
+func TestKeeneticPaged_SkipsIPv6(t *testing.T) {
+	entries := []resolver.PrefixEntry{
+		entry("2001:db8::/32"),
+		entry("10.0.0.0/8"),
+		entry("2001:db8:1::/48"),
+	}
+	dir := t.TempDir()
+	base := dir + "/routes"
+
+	paths, err := KeeneticPaged(base, entries, 1000)
+	if err != nil {
+		t.Fatalf("KeeneticPaged() error = %v", err)
+	}
+	if len(paths) != 1 {
+		t.Errorf("len(paths) = %d; want 1", len(paths))
+	}
+
+	data, err := os.ReadFile(base + "_001.txt")
+	if err != nil {
+		t.Fatalf("ReadFile error = %v", err)
+	}
+	lines := strings.Split(strings.TrimRight(string(data), "\n"), "\n")
+	if len(lines) != 1 {
+		t.Errorf("len(lines) = %d; want 1 (IPv6 must be skipped)", len(lines))
+	}
+	if !strings.Contains(lines[0], "10.0.0.0") {
+		t.Errorf("expected 10.0.0.0 in line, got %q", lines[0])
+	}
+}
+
+func TestKeeneticPaged_Empty(t *testing.T) {
+	dir := t.TempDir()
+	base := dir + "/routes"
+
+	paths, err := KeeneticPaged(base, nil, 1000)
+	if err != nil {
+		t.Fatalf("KeeneticPaged() error = %v", err)
+	}
+	if len(paths) != 0 {
+		t.Errorf("len(paths) = %d; want 0", len(paths))
+	}
+	// No files should have been created in the directory.
+	dirEntries, err := os.ReadDir(dir)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(dirEntries) != 0 {
+		t.Errorf("expected no files in dir, got %d", len(dirEntries))
+	}
+}
+
+func TestKeeneticPaged_InvalidPageSize(t *testing.T) {
+	dir := t.TempDir()
+	paths, err := KeeneticPaged(dir+"/routes", nil, 0)
+	if err == nil {
+		t.Error("expected error for pageSize=0, got nil")
+	}
+	if len(paths) != 0 {
+		t.Errorf("expected nil/empty paths on error, got %v", paths)
 	}
 }
 

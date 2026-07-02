@@ -62,6 +62,10 @@ go run ./cmd/main.go -i input.yaml --ip-version 6 -f cidr
 
 # Both IPv4 and IPv6, YAML output
 go run ./cmd/main.go -i input.yaml --ip-version both -f yaml -o result.yaml
+
+# Keenetic output split into pages of 1000 routes each
+go run ./cmd/main.go -i input.yaml -f keenetic --page-size 1000 -o routes
+# produces: routes_001.txt, routes_002.txt, ...
 ```
 
 ## Flags
@@ -76,6 +80,7 @@ go run ./cmd/main.go -i input.yaml --ip-version both -f yaml -o result.yaml
 | `--ip-version` | `4` | IP version: `4`, `6`, or `both` |
 | `--concurrency` | `5` | Parallel RIPE API requests |
 | `--timeout` | `30s` | HTTP request timeout |
+| `--page-size` | `0` | Split `keenetic` output into pages of N routes; requires `--output` (used as base name). `0` = disabled |
 
 ## Output formats
 
@@ -86,6 +91,16 @@ ROUTE ADD 5.45.192.0       MASK 255.255.192.0   0.0.0.0 :: rem AS13238 Yandex LL
 ROUTE ADD 77.88.0.0        MASK 255.255.192.0   0.0.0.0 :: rem AS13238 Yandex LLC [ip:77.88.55.77]
 ROUTE ADD 217.69.128.0     MASK 255.255.192.0   0.0.0.0 :: rem AS47764 Mail.Ru LLC [domain:mail.ru]
 ```
+
+#### Pagination
+
+Keenetic firmware limits the number of static routes that can be imported at once. Use `--page-size` to split the output into multiple files:
+
+```bash
+go run ./cmd/main.go -i input.yaml -f keenetic --page-size 1000 -o routes
+```
+
+This produces `routes_001.txt`, `routes_002.txt`, … — each containing at most 1000 routes. Import them one file at a time.
 
 ### `amnezia` — AmneziaVPN split tunneling
 

@@ -25,6 +25,7 @@ var (
 	flagIPVersion   string
 	flagConcurrency int
 	flagTimeout     time.Duration
+	flagPageSize    int
 )
 
 func main() {
@@ -60,6 +61,7 @@ func init() {
 	rootCmd.Flags().StringVar(&flagIPVersion, "ip-version", "4", "IP version to include: 4, 6, both")
 	rootCmd.Flags().IntVar(&flagConcurrency, "concurrency", 5, "Parallel requests to RIPE API")
 	rootCmd.Flags().DurationVar(&flagTimeout, "timeout", 30*time.Second, "HTTP request timeout")
+	rootCmd.Flags().IntVar(&flagPageSize, "page-size", 0, "Split keenetic output into pages of N routes (0 = no pagination); requires --output")
 }
 
 func run(cmd *cobra.Command, _ []string) error {
@@ -69,6 +71,11 @@ func run(cmd *cobra.Command, _ []string) error {
 	case "keenetic", "amnezia", "cidr", "yaml":
 	default:
 		return fmt.Errorf("unknown format %q: must be one of keenetic, amnezia, cidr, yaml", flagFormat)
+	}
+
+	// --page-size is only meaningful for keenetic.
+	if flagPageSize > 0 && format != "keenetic" {
+		return fmt.Errorf("--page-size is only supported with --format=keenetic")
 	}
 
 	// Validate --ip-version
@@ -150,6 +157,23 @@ func run(cmd *cobra.Command, _ []string) error {
 
 	// Format output.
 	fmt.Fprintf(os.Stderr, "[INFO] Formatting as %q (%d prefixes)\n", format, len(entries))
+
+	// Keenetic with pagination: requires --output as the base path.
+	if format == "keenetic" && flagPageSize > 0 {
+		if flagOutput == "" {
+			return fmt.Errorf("--page-size requires --output to be set (used as base path for page files)")
+		}
+		paths, err := formatter.KeeneticPaged(flagOutput, entries, flagPageSize)
+		if err != nil {
+			return fmt.Errorf("formatting output: %w", err)
+		}
+		fmt.Fprintf(os.Stderr, "[INFO] Keenetic output split into %d page(s) of up to %d routes each\n", len(paths), flagPageSize)
+		for _, p := range paths {
+			fmt.Fprintf(os.Stderr, "[INFO]   %s\n", p)
+		}
+		return nil
+	}
+
 	switch format {
 	case "keenetic":
 		err = formatter.Keenetic(out, entries)

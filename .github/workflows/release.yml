@@ -88,7 +88,7 @@ jobs:
           CGO_ENABLED: '0'
         run: |
           out="net_rules_aggregator_${{ matrix.goos }}_${{ matrix.goarch }}${{ matrix.ext }}"
-          go build -ldflags="-s -w" -o "$out" ./cmd/main.go
+          go build -ldflags="-s -w" -o "$out" ./cmd
       - uses: actions/upload-artifact@v4
         with:
           name: binary-${{ matrix.goos }}-${{ matrix.goarch }}
@@ -97,6 +97,8 @@ jobs:
 
   generate-lists:
     needs: test
+    # Intentionally runs on every push to main (no `if:` guard) so that
+    # release-latest can always pick up fresh artifacts from the latest commit.
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -104,12 +106,13 @@ jobs:
         with:
           go-version-file: go.mod
       - name: Build binary
-        run: go build -ldflags="-s -w" -o net_rules_aggregator ./cmd/main.go
+        run: go build -ldflags="-s -w" -o net_rules_aggregator ./cmd
       - name: Generate lists in all formats
         run: |
           SHA=$(echo "$GITHUB_SHA" | cut -c1-7)
           echo "SHA=$SHA" >> "$GITHUB_ENV"
           ./net_rules_aggregator -i input.example.yaml -f keenetic -o "routes_keenetic_${SHA}.txt"
+          ./net_rules_aggregator -i input.example.yaml -f keenetic --page-size 1000 -o "routes_keenetic_paged_${SHA}"
           ./net_rules_aggregator --skip-resolve -f amnezia -o "amnezia_sites_${SHA}.json"
           ./net_rules_aggregator --skip-resolve -f cidr    -o "routes_cidr_${SHA}.txt"
           ./net_rules_aggregator --skip-resolve -f yaml    -o "routes_yaml_${SHA}.yaml"
@@ -118,6 +121,7 @@ jobs:
           name: lists
           path: |
             routes_keenetic_${{ env.SHA }}.txt
+            routes_keenetic_paged_${{ env.SHA }}_*.txt
             amnezia_sites_${{ env.SHA }}.json
             routes_cidr_${{ env.SHA }}.txt
             routes_yaml_${{ env.SHA }}.yaml
@@ -137,7 +141,7 @@ jobs:
       - uses: ncipollo/release-action@v1
         with:
           tag: latest
-          name: "Latest (master)"
+          name: "Latest (main)"
           prerelease: true
           makeLatest: false
           allowUpdates: true
