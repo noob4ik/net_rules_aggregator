@@ -3,6 +3,10 @@
 CLI utility that generates subnet lists from ASNs, domains, and IPs,
 formatted for import into Keenetic (static routes) and AmneziaVPN (split tunneling).
 
+## Branch workflow
+
+Use feature branches for implementation work (branch names in the form `feature/<short-description>`), and merge into the main branch only after review/validation.
+
 ## Project structure
 
 ```
@@ -32,9 +36,10 @@ input.example.yaml               # Example input file (copy to input.yaml and ed
 input.Load(path)
     └─► resolver.ResolveAll(asns, domains, rawIPs, directPrefixes, opts, warnFn)
             ├─ ResolveDomains (DNS, concurrent)
-            ├─ ripeClient.IPToASN   (RIPEstat prefix-overview)
+            ├─ ripeClient.IPToASN   (RIPEstat prefix-overview, for domain IPs)
             ├─ ripeClient.ASNOrgName (RIPEstat as-overview)
             └─ ripeClient.ASNPrefixes (RIPEstat announced-prefixes)
+            └─ RawIPs → PrefixFrom(addr, BitLen) (no RIPE lookups)
     └─► aggregator.Aggregate(entries)   — dedup + CIDR summarisation
     └─► cache.Save(path, entries, asns) — write cache.yaml
     └─► formatter.{Keenetic,Amnezia,CIDR,YAML}(w, entries)
@@ -66,7 +71,7 @@ input.Load(path)
 ## Data sources
 
 - DNS: `net.DefaultResolver` (system resolver)
-- IP → ASN: `https://stat.ripe.net/data/prefix-overview/data.json?resource=<IP>`
+- domain IP → ASN: `https://stat.ripe.net/data/prefix-overview/data.json?resource=<IP>`
 - ASN → prefixes: `https://stat.ripe.net/data/announced-prefixes/data.json?resource=<ASN>`
 - ASN → org name: `https://stat.ripe.net/data/as-overview/data.json?resource=<ASN>`
 
@@ -104,7 +109,7 @@ Test files live next to the package they test (`*_test.go`):
 | `internal/aggregator/aggregator_test.go` | `aggregator` | `prefixLess`, `tryMerge`, `removeRedundant`, `aggregatePrefixes`, `Aggregate` (dedup, merge, metadata preservation, IPv4/IPv6 independence) |
 | `internal/formatter/formatter_test.go` | `formatter` | `CIDR`, `Amnezia`, `Keenetic` (IPv6 filtering, CIDR fallback comment), `YAML`, `prefixLenToMask`, `buildComment`, `shortenSource` |
 | `internal/cache/cache_test.go` | `cache` | `Save`+`Load` round-trip, host-bit zeroing on load, invalid CIDR error, missing file error |
-| `internal/resolver/resolver_test.go` | `resolver` | `unique`, `IPToASN`, `ASNOrgName`, `ASNPrefixes` (IP version filtering, invalid prefix skipping), `ResolveDomains` concurrency fallback — all HTTP calls mocked via `httptest.Server` |
+| `internal/resolver/resolver_test.go` | `resolver` | `unique`, `IPToASN`, `ASNOrgName`, `ASNPrefixes` (IP version filtering, invalid prefix skipping), `ResolveAll` (raw IPs as host prefixes), `ResolveDomains` concurrency fallback — all HTTP calls mocked via `httptest.Server` |
 
 **Conventions:**
 - Tests do not make real network calls; RIPE API responses are served by `httptest.Server` with a custom `http.RoundTripper` that redirects requests.
