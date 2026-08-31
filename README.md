@@ -170,7 +170,7 @@ Use `--skip-resolve` to reformat without hitting the network again.
 
 ## CDN warnings
 
-When a resolved domain or IP belongs to a well-known CDN (Cloudflare, Akamai, Google, Meta, Fastly, Amazon CloudFront), a warning is printed to stderr:
+When a resolved domain belongs to a well-known CDN, or a known CDN ASN is specified directly (Cloudflare, Akamai, Google, Meta, Fastly, Amazon CloudFront), a warning is printed to stderr. Raw IPs do not trigger this warning because they are included directly without an ASN lookup:
 
 ```
 [WARN] WARNING: AS13335 (Cloudflare) is a well-known CDN — adding all its prefixes may be undesirable
