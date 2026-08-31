@@ -194,6 +194,7 @@ func ResolveAll(
 		}
 		asnMap[asn] = append(asnMap[asn], source)
 	}
+	var entries []PrefixEntry
 
 	// 1. Direct ASNs from input.
 	for _, asn := range asns {
@@ -219,14 +220,15 @@ func ResolveAll(
 		}
 	}
 
-	// 3. Resolve raw IPs → ASN.
+	// 3. Include raw IPs as host prefixes (no ASN lookup).
 	for _, ip := range rawIPs {
-		info, err := client.IPToASN(ctx, ip)
-		if err != nil {
-			warnFn(fmt.Sprintf("RIPE lookup for IP %s: %v", ip, err))
-			continue
-		}
-		addASN(info.ASN, fmt.Sprintf("ip:%s", ip))
+		pfx := netip.PrefixFrom(ip, ip.BitLen()).Masked()
+		entries = append(entries, PrefixEntry{
+			CIDR:   pfx,
+			ASN:    "",
+			Org:    "",
+			Source: fmt.Sprintf("ip:%s", ip),
+		})
 	}
 
 	// 4. Warn about CDN ASNs.
@@ -277,7 +279,6 @@ func ResolveAll(
 	}
 	close(jobs)
 
-	var entries []PrefixEntry
 	for range asnMap {
 		r := <-results
 		if r.err != nil {

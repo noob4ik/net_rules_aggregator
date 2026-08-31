@@ -43,6 +43,7 @@ and formats them for import into Keenetic (static routes) or AmneziaVPN (split t
 Pipeline:
   1. Read input YAML (--input)
   2. Resolve domains → IP → ASN via DNS + RIPEstat API
+     (Raw IPs from input are used as host prefixes without RIPE lookup)
   3. Fetch all prefixes for collected ASNs from RIPEstat
   4. Aggregate/summarise CIDRs
   5. Save intermediate cache (--cache-file)

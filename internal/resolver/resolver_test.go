@@ -8,6 +8,7 @@ import (
 	"net/http/httptest"
 	"net/netip"
 	"testing"
+	"time"
 )
 
 // --- unique ---
@@ -159,6 +160,58 @@ func TestIPToASN_HTTPError(t *testing.T) {
 	_, err := client.IPToASN(context.Background(), addr)
 	if err == nil {
 		t.Fatal("expected error for HTTP 500, got nil")
+	}
+}
+
+func TestResolveAll_RawIPsAddedAsHostPrefixes(t *testing.T) {
+	rawIPv4 := netip.MustParseAddr("77.88.55.77")
+	rawIPv6 := netip.MustParseAddr("2001:db8::1")
+
+	entries, err := ResolveAll(
+		context.Background(),
+		nil,
+		nil,
+		[]netip.Addr{rawIPv4, rawIPv6},
+		nil,
+		Options{
+			IPVersion:   4,
+			Concurrency: 2,
+			Timeout:     2 * time.Second,
+		},
+		func(string) {},
+	)
+	if err != nil {
+		t.Fatalf("ResolveAll() error = %v", err)
+	}
+
+	if len(entries) != 2 {
+		t.Fatalf("len(entries) = %d; want 2", len(entries))
+	}
+
+	if got := entries[0].CIDR.String(); got != "77.88.55.77/32" {
+		t.Fatalf("entries[0].CIDR = %q; want %q", got, "77.88.55.77/32")
+	}
+	if entries[0].ASN != "" {
+		t.Errorf("entries[0].ASN = %q; want empty", entries[0].ASN)
+	}
+	if entries[0].Org != "" {
+		t.Errorf("entries[0].Org = %q; want empty", entries[0].Org)
+	}
+	if entries[0].Source != "ip:77.88.55.77" {
+		t.Errorf("entries[0].Source = %q; want %q", entries[0].Source, "ip:77.88.55.77")
+	}
+
+	if got := entries[1].CIDR.String(); got != "2001:db8::1/128" {
+		t.Fatalf("entries[1].CIDR = %q; want %q", got, "2001:db8::1/128")
+	}
+	if entries[1].ASN != "" {
+		t.Errorf("entries[1].ASN = %q; want empty", entries[1].ASN)
+	}
+	if entries[1].Org != "" {
+		t.Errorf("entries[1].Org = %q; want empty", entries[1].Org)
+	}
+	if entries[1].Source != "ip:2001:db8::1" {
+		t.Errorf("entries[1].Source = %q; want %q", entries[1].Source, "ip:2001:db8::1")
 	}
 }
 

@@ -11,7 +11,9 @@ Input YAML (ASNs, domains, IPs)
 [1] DNS resolution: domain → IP
         │
         ▼
-[2] RIPEstat API: IP → ASN, ASN → prefix list + org name
+[2] RIPEstat API: domain IPs → ASN, ASN → prefix list + org name
+        │
+        ├─ raw IPs from `ips` are used directly as host prefixes
         │
         ▼
 [3] CIDR aggregation (merge adjacent subnets)
@@ -44,7 +46,7 @@ domains:
   - ok.ru
 
 ips:
-  - 77.88.55.77       # single IP → resolved to ASN automatically
+  - 77.88.55.77       # single IP → added as host prefix (/32 or /128)
   - 5.45.192.0/18     # direct prefix → included as-is
 ```
 
@@ -168,7 +170,7 @@ Use `--skip-resolve` to reformat without hitting the network again.
 
 ## CDN warnings
 
-When a resolved domain or IP belongs to a well-known CDN (Cloudflare, Akamai, Google, Meta, Fastly, Amazon CloudFront), a warning is printed to stderr:
+When a resolved domain belongs to a well-known CDN, or a known CDN ASN is specified directly (Cloudflare, Akamai, Google, Meta, Fastly, Amazon CloudFront), a warning is printed to stderr. Raw IPs do not trigger this warning because they are included directly without an ASN lookup:
 
 ```
 [WARN] WARNING: AS13335 (Cloudflare) is a well-known CDN — adding all its prefixes may be undesirable
@@ -177,7 +179,7 @@ When a resolved domain or IP belongs to a well-known CDN (Cloudflare, Akamai, Go
 ## Data sources
 
 - **DNS resolution** — system resolver (`net.DefaultResolver`)
-- **IP → ASN** — [RIPEstat prefix-overview API](https://stat.ripe.net/docs/02.data-api/prefix-overview.html)
+- **domain IP → ASN** — [RIPEstat prefix-overview API](https://stat.ripe.net/docs/02.data-api/prefix-overview.html)
 - **ASN → prefixes** — [RIPEstat announced-prefixes API](https://stat.ripe.net/docs/02.data-api/announced-prefixes.html)
 - **ASN org name** — [RIPEstat as-overview API](https://stat.ripe.net/docs/02.data-api/as-overview.html)
 
