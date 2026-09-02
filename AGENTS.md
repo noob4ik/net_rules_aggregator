@@ -112,6 +112,13 @@ Test files live next to the package they test (`*_test.go`):
 - Temporary files use `t.TempDir()` — cleaned up automatically.
 - DNS tests only use empty domain lists to avoid real lookups.
 
+## Development flow (single-author mode)
+
+- Changes must go through feature branch + PR to `main`.
+- Merge must be performed through GitHub PR interface, not local `git merge`.
+- PR self-approve is not possible on GitHub (an author cannot approve their own PR); use PR-level comments/checks as self-review and merge directly from UI after checks pass.
+- If strict approval rules are ever enabled, create/assign a secondary reviewer account (or bot) for the approval step.
+
 ## Output format examples
 
 **keenetic**
