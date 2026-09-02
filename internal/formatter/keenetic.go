@@ -79,7 +79,11 @@ func KeeneticPaged(basePath string, entries []resolver.PrefixEntry, pageSize int
 	}
 
 	if len(ipv4) == 0 {
-		return nil, nil
+		path := KeeneticPagePath(basePath, 1)
+		if err := writeKeeneticPage(path, nil); err != nil {
+			return nil, err
+		}
+		return []string{path}, nil
 	}
 
 	pages := (len(ipv4) + pageSize - 1) / pageSize

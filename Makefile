@@ -3,6 +3,7 @@
 ARTIFACTS := cache.yaml \
 	keenetic_routes.bat \
 	routes.txt \
+	routes \
 	result.yaml \
 	amnezia_sites.json \
 	amnezia_sites_*.json \
