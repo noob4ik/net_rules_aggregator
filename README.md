@@ -54,7 +54,7 @@ ips:
 
 ```bash
 # Full pipeline: resolve + aggregate + output
-go run ./cmd/main.go -i input.yaml -f keenetic -o routes.txt
+go run ./cmd/main.go -i input.yaml -f keenetic --page-size 1000 -o routes
 
 # Use cached result (no network requests)
 go run ./cmd/main.go --skip-resolve -f amnezia -o amnezia_sites.json
